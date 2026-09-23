@@ -1,107 +1,82 @@
-# Atlas Agent Lab
+# RelayOps AI
 
-**Recruiter-facing AI systems engineering demo** that makes the system around the model visible.
+**Realistic AI support-operations copilot** for ticket triage, incident correlation, grounded response drafting, tool governance and human approval workflows.
 
-![Zero key](https://img.shields.io/badge/demo-zero--key-0b1220?style=flat-square)
-![Vercel](https://img.shields.io/badge/deploy-Vercel-0b1220?style=flat-square)
-![CI](https://img.shields.io/badge/CI-smoke%20test-0b1220?style=flat-square)
+## What the demo simulates
 
-## What it demonstrates
+This is intentionally closer to a real internal SaaS operations console than a chatbot.
 
-Atlas turns a user request into an inspectable workflow:
+- enterprise support inbox with P1/P2/P3 tickets
+- customer/account context and SLA state
+- incident correlation across multiple tickets
+- observability signals from a payments service
+- RAG-style retrieval from support policies and incident records
+- AI-generated case summary and customer response
+- tool/action policy with a human approval gate
+- explicit audit trail and agent execution trace
+- deterministic browser runtime with no API key required
 
-- intent + risk classification
-- RAG-style retrieval with ranked local evidence
-- MCP-style typed tool contracts
-- prompt-injection gating before tool execution
-- grounded answering and abstention
-- latency, confidence, retrieval and risk telemetry
-- a six-case deterministic evaluation harness
-- zero-key browser operation
+## Why this is more realistic
 
-The repository also contains an **optional server-side Gemini adapter** at \`api/ask.js\`. The browser experience does not depend on it.
+The AI is not presented as an autonomous chatbot. It sits inside an operational workflow where the important question is:
 
-## Why this is a portfolio project
+> What should the system do next, and what must a human approve?
 
-A generic chatbot mostly demonstrates that someone can wire up an API.
-
-Atlas is designed to demonstrate that the developer understands the harder engineering questions around AI products: **how context is selected, how tools are constrained, how failures are surfaced, how grounding is measured, and how behavior is evaluated.**
+The demo separates **analysis from external side effects**. The copilot can recommend escalation, retrieve evidence and prepare a response, but sending an external message or changing ticket state requires approval.
 
 ## Architecture
 
-\`\`\`text
-User request
+```text
+Support ticket
      │
      ▼
-┌─────────────────────┐
-│ Intent + risk gate  │  ← block before tools
-└──────────┬──────────┘
+┌──────────────────────┐
+│ Triage + priority    │
+│ customer/SLA context │
+└──────────┬───────────┘
            ▼
-┌─────────────────────┐
-│ Retrieval + ranking │  ← evidence
-└──────────┬──────────┘
+┌──────────────────────┐
+│ Incident correlation │ ← related tickets + telemetry
+└──────────┬───────────┘
            ▼
-┌─────────────────────┐
-│ Tool router         │  ← typed capability
-└──────────┬──────────┘
+┌──────────────────────┐
+│ RAG / evidence       │ ← policies + incident records
+└──────────┬───────────┘
            ▼
-┌─────────────────────┐
-│ Context compiler    │  ← sources + policy
-└──────────┬──────────┘
+┌──────────────────────┐
+│ Copilot decision     │ ← escalation + next action
+└──────────┬───────────┘
            ▼
-┌─────────────────────┐
-│ Generation + verify │  ← grounded answer
-└──────────┬──────────┘
+┌──────────────────────┐
+│ Draft response       │ ← grounded customer message
+└──────────┬───────────┘
            ▼
-     telemetry + UI
-\`\`\`
-
-## Run locally
-
-No build step is required:
-
-\`\`\`bash
-python -m http.server 8080
-\`\`\`
-
-Open \`http://localhost:8080\`.
-
-Run the dependency-free smoke test:
-
-\`\`\`bash
-node tests/smoke.mjs
-\`\`\`
-
-## Project structure
-
-\`\`\`text
-.
-├── index.html
-├── api/ask.js
-├── tests/smoke.mjs
-├── .github/workflows/smoke.yml
-├── .env.example
-├── vercel.json
-└── README.md
-\`\`\`
-
-## Scope boundaries
-
-The default retrieval engine is **lexical**, not embedding-based. The tool layer is **MCP-style**, not a claim of a remote MCP server. These choices are deliberate: they keep the demo portable, deterministic and inspectable.
-
-Clear upgrade paths include embeddings + vector search, a real MCP server, persistent memory, a model gateway, and distributed tracing.
-
-## Optional live model
-
-Set \`GEMINI_API_KEY\` in Vercel to enable the server-side adapter. Never commit secrets.
+┌──────────────────────┐
+│ Approval gate        │ ← human before side effect
+└──────────┬───────────┘
+           ▼
+     Audit + telemetry
+```
 
 ## Recruiter talking points
 
-**AI engineering:** retrieval, orchestration, guardrails, tool contracts, abstention, evaluation, observability.
+**AI engineering:** RAG, evidence grounding, incident correlation, policy-aware tool use, abstention/approval gates and observability.
 
-**Product thinking:** the interface exposes pipeline state rather than hiding everything behind a chat box.
+**Product thinking:** AI is embedded in a real operational workflow instead of being a standalone chat interface.
 
-**Production mindset:** zero-secret default, explicit failure states, lightweight CI, security headers, and documented limitations.
+**Production mindset:** external actions are gated, decisions are auditable, customer context is visible, and the demo has clear boundaries.
+
+## Run locally
+
+```bash
+python -m http.server 8080
+```
+
+Open `http://localhost:8080`.
+
+## Scope
+
+The current UI is a realistic deterministic simulation. The next production layer would connect the same interfaces to a real ticketing system, incident platform, knowledge base, model gateway and persistent audit store.
 
 ## License
 
